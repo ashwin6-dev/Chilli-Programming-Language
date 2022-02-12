@@ -1,0 +1,16 @@
+n = number(readln("Enter number of items: "))
+list = {}
+
+for i range(1, n, 1)
+    list.push(number(readln(">")))
+end
+
+mean = 0
+
+for x list
+    mean = mean + x
+end
+
+mean = mean / n
+
+println ("The mean of your list is ", mean)
