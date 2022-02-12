@@ -1,6 +1,6 @@
-# Chilli-Programming-Language
+# 🌶️ 🌶️ Chilli Programming Language
 
-A dynamically-typed, interpreted, scripting programming language written in C++.
+Chilli is a dynamically-typed, interpreted, scripting programming language written in C++.
 
 Still under developement but supports basic programming constructs such as:
 1. function declartions and calls
