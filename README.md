@@ -1,4 +1,4 @@
-# 🌶️ 🌶️ Chilli Programming Language
+# Chilli Programming Language 🌶️
 
 Chilli is a dynamically-typed, interpreted, scripting programming language written in C++.
 
