@@ -15,7 +15,7 @@ Run "run.bat" (if on windows) to compile the compiler and to run the example fil
 
 To add...
 
-1. More error handling
+1. Improve error handling (error messages are still too simple and not all errors are handled yet)
 2. Extend syntax e.g add +=, -= etc
 3. Create a documentation for the language
 4. Add OOP
