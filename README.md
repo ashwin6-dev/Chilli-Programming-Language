@@ -10,7 +10,7 @@ Still under developement but supports basic programming constructs such as:
 5. for loops
 6. lists
 
-Run "run.bat" (if on windows) to compile the compiler and to run the example file "main.chilli".
+Run "run.bat" (if on windows) to compile the interpreter and to run the example file "main.chilli".
 
 
 To add...
