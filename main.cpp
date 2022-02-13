@@ -16,6 +16,7 @@ int main(int argc, char** argv) {
       ss << f.rdbuf();
       s = ss.str();
     }
+
     Parser p(s);
     
     Node* program = p.Parse().node;

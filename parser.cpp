@@ -19,11 +19,10 @@ Token Parser::EatType(string t) {
 
     if (next.type == t) {
         tokenizer.idx += next.value.size();
-
         return next;
     }
 
-    cout << "error: unexpected token " << next.value << ".  Expected type " << t;
+    cout << "line " << next.lineno << " error: unexpected token " << next.value << ".  Expected type " << t;
     exit(-1);
 }
 
@@ -36,7 +35,7 @@ Token Parser::EatValue(string v) {
         return next;
     }
 
-    cout << "error: unexpected token " << next.value << ". Expected value " << v;
+    cout << "line " << next.lineno << " error: unexpected token " << next.value << ". Expected value " << v;
     exit(-1);
 }
 
@@ -83,7 +82,7 @@ NodeWrapper Parser::Line() {
     line = Expr();
     if (line.parseSuccess) return line;
 
-    cout << "error: unexpected token " << tokenizer.Peek().value;
+    cout << "line " << tokenizer.Peek().lineno << " error: unexpected token " << tokenizer.Peek().value;
     exit(-1);
 
     return line;
@@ -344,6 +343,7 @@ NodeWrapper Parser::PrimaryExpr() {
 NodeWrapper Parser::VarAssign() {
     Token next = tokenizer.Peek();
     int save = tokenizer.idx;
+    int saveLineno = tokenizer.lineno;
     if (next.type == "IDENT") {
         string value = EatType("IDENT").value;
 
@@ -356,6 +356,7 @@ NodeWrapper Parser::VarAssign() {
     }
 
     tokenizer.idx = save;
+    tokenizer.lineno = saveLineno;
     return WrapNode(false, new Node());
 }
 
@@ -363,6 +364,7 @@ NodeWrapper Parser::VarAssign() {
 NodeWrapper Parser::IfStmt() {
     Token next = tokenizer.Peek();
     int save = tokenizer.idx;
+    int saveLineno = tokenizer.lineno;
 
     if (next.value == "if") {
         EatValue("if");
@@ -390,12 +392,14 @@ NodeWrapper Parser::IfStmt() {
     }
 
     tokenizer.idx = save;
+    tokenizer.lineno = saveLineno;
     return WrapNode(false, new Node());
 }
 
 NodeWrapper Parser::WhileLoop() {
     Token next = tokenizer.Peek();
     int save = tokenizer.idx;
+    int saveLineno = tokenizer.lineno;
 
     if (next.value == "while") {
         EatValue("while");
@@ -412,12 +416,14 @@ NodeWrapper Parser::WhileLoop() {
     }
 
     tokenizer.idx = save;
+    tokenizer.lineno = saveLineno;
     return WrapNode(false, new Node());
 }
 
 NodeWrapper Parser::ForLoop() {
     Token next = tokenizer.Peek();
     int save = tokenizer.idx;
+    int saveLineno = tokenizer.lineno;
 
     if (next.value == "for") {
         EatValue("for");
@@ -435,6 +441,7 @@ NodeWrapper Parser::ForLoop() {
     }
 
     tokenizer.idx = save;
+    tokenizer.lineno = saveLineno;
     return WrapNode(false, new Node());
 }
 
@@ -443,6 +450,7 @@ NodeWrapper Parser::ParseFuncDec() {
     Token next = tokenizer.Peek();
 
     int save = tokenizer.idx;
+    int saveLineno = tokenizer.lineno;
 
     if (next.type == "IDENT") {
         string value = EatType("IDENT").value;
@@ -465,6 +473,7 @@ NodeWrapper Parser::ParseFuncDec() {
     }
 
     tokenizer.idx = save;
+    tokenizer.lineno = saveLineno;
     return WrapNode(false, new Node());
 }
 
@@ -472,6 +481,7 @@ NodeWrapper Parser::ReturnStmt() {
     Token next = tokenizer.Peek();
 
     int save = tokenizer.idx;
+    int saveLineno = tokenizer.lineno;
 
     if (next.value == "return") {
         EatValue("return");
@@ -482,5 +492,6 @@ NodeWrapper Parser::ReturnStmt() {
     }
 
     tokenizer.idx = save;
+    tokenizer.lineno = saveLineno;
     return WrapNode(false, new Node());
 }

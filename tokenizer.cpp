@@ -1,5 +1,6 @@
 #include "tokenizer.h"
 #include <regex>
+#include <string>
 
 using namespace std;
 
@@ -33,7 +34,11 @@ Token Tokenizer::Peek() {
             string v = sm[0];
             string t = s[1];
 
-            if (t == "") { 
+            if (t == "NEW_LINE") {
+                idx += v.size();
+                lineno += 1;
+                return Peek();
+            }else if (t == "") { 
                 idx += v.size();
                 return Peek();
             }
@@ -42,6 +47,11 @@ Token Tokenizer::Peek() {
             
             return token;
         }
+    }
+
+    if (idx < src.size()) {
+        cout << "line " << lineno << " error: invalid token " << src[idx];
+        exit(-1);
     }
 
     return Token("", "NONE", -1);

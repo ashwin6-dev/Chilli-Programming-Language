@@ -1,16 +1,16 @@
-n = number(readln("Enter number of items: "))
-list = {}
+fizzbuzz :: (start, end)
+    for n range(start, end, 1)
+        s = ""
+        if n % 3 == 0
+            s = s + "fizz"
+        end
 
-for i range(1, n, 1)
-    list.push(number(readln(">")))
+        if n % 5 == 0
+            s = s + "buzz"
+        end
+
+        println (n, s)
+    end
 end
 
-mean = 0
-
-for x list
-    mean = mean + x
-end
-
-mean = mean / n
-
-println ("The mean of your list is ", mean)
+fizzbuzz(0, 500)

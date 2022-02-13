@@ -16,6 +16,7 @@ class Tokenizer {
     public:
         string src;
         vector<vector<string>> scheme{
+            {"^(\\r\\n|\\r|\\n)", "NEW_LINE"},
             {"^\\s+", ""},
             {"^and", "BOOL_CHAIN"},
             {"^or", "BOOL_CHAIN"},

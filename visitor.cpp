@@ -528,6 +528,12 @@ void Visitor::visit(FuncCall* node) {
         call_no.pop_back();
         continue_block = true;
     }else {
+
+        if (!FMap.count(node->value)) {
+            cout << "error: the function " << node->value << " has not been defined";
+            exit(-1);
+        }
+
         call_no.push_back(block_no);
         FMap[node->value](node, this);
         call_no.pop_back();
