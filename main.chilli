@@ -2,15 +2,15 @@ fizzbuzz :: (start, end)
     for n range(start, end, 1)
         s = ""
         if n % 3 == 0
-            s = s + "fizz"
+            s += "fizz"
         end
 
         if n % 5 == 0
-            s = s + "buzz"
+            s += "buzz"
         end
 
         println (n, s)
     end
 end
 
-fizzbuzz(0, 500)
+fizzbuzz(0, 10)

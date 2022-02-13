@@ -352,6 +352,26 @@ NodeWrapper Parser::VarAssign() {
             NodeWrapper expr = Expr();
 
             return WrapNode(true, new VarAssignNode(value, expr.node));
+        }else if (tokenizer.Peek().value == "+=") {
+            EatValue("+=");
+            NodeWrapper expr = Expr();
+            Node* addNode = new OpNode("+", new VarNode(value), expr.node);
+            return WrapNode(true, new VarAssignNode(value, addNode));
+        }else if (tokenizer.Peek().value == "-=") {
+            EatValue("-=");
+            NodeWrapper expr = Expr();
+            Node* addNode = new OpNode("-", new VarNode(value), expr.node);
+            return WrapNode(true, new VarAssignNode(value, addNode));
+        }else if (tokenizer.Peek().value == "*=") {
+            EatValue("*=");
+            NodeWrapper expr = Expr();
+            Node* addNode = new OpNode("*", new VarNode(value), expr.node);
+            return WrapNode(true, new VarAssignNode(value, addNode));
+        }else if (tokenizer.Peek().value == "/=") {
+            EatValue("/=");
+            NodeWrapper expr = Expr();
+            Node* addNode = new OpNode("/", new VarNode(value), expr.node);
+            return WrapNode(true, new VarAssignNode(value, addNode));
         }
     }
 
