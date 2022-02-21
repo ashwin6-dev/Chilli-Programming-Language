@@ -11,6 +11,8 @@ class Node {
     public:
         virtual void print();
         virtual void accept(Visitor* visitor);
+        virtual void mutate(Visitor* visitor);
+        virtual void point(Visitor* visitor);
 };
 
 
@@ -44,6 +46,8 @@ class VarNode : public Node {
         VarNode(string v);
         void print();
         void accept(Visitor* visitor);
+        void mutate(Visitor* visitor);
+        void point(Visitor* visitor);
 };
 
 class NotNode : public Node {
@@ -80,6 +84,8 @@ class OpNode : public Node {
         OpNode(string o, Node* l, Node* r);
         void print();
         void accept(Visitor* visitor);
+        void mutate(Visitor* visitor);
+        void point(Visitor* visitor);
 };
 
 class VarAssignNode : public Node {
@@ -87,6 +93,16 @@ class VarAssignNode : public Node {
         string value;
         Node* expr;
         VarAssignNode(string v, Node* e);
+        void accept(Visitor* visitor);
+};
+
+
+class PropertyAssignNode : public Node {
+    public:
+        string property;
+        Node* expr;
+
+        PropertyAssignNode(string p, Node* e);
         void accept(Visitor* visitor);
 };
 
@@ -139,5 +155,15 @@ class ReturnNode : public Node {
     public:
         Node* expr;
         ReturnNode(Node* e);
+        void accept(Visitor* visitor);
+};
+
+class ClassMethod : public Node {
+    public:
+        string class_name;
+        string value;
+        vector<string> params;
+        Node* block;
+        ClassMethod(string v, string c, vector<string> p, Node* b);
         void accept(Visitor* visitor);
 };

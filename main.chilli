@@ -1,16 +1,28 @@
-fizzbuzz :: (start, end)
-    for n range(start, end, 1)
-        s = ""
-        if n % 3 == 0
-            s += "fizz"
-        end
-
-        if n % 5 == 0
-            s += "buzz"
-        end
-
-        println (n, s)
-    end
-end
-
-fizzbuzz(0, 10)
+print ("hello")
+print ("hello")
+print ("hello")
+print ("hello")
+print ("hello")
+print ("hello")
+print ("hello")
+print ("hello")
+print ("hello")
+print ("hello")
+print ("hello")
+print ("hello")
+print ("hello")
+print ("hello")
+print ("hello")
+print ("hello")
+print ("hello")
+print ("hello")
+print ("hello")
+print ("hello")
+print ("hello")
+print ("hello")
+print ("hello")
+print ("hello")
+print ("hello")
+print ("hello")
+print ("hello")
+print ("hello")

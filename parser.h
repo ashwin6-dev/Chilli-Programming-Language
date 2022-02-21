@@ -26,10 +26,12 @@ class Parser {
         NodeWrapper IndexingExpr();
         NodeWrapper PrimaryExpr();
         NodeWrapper VarAssign();
+        NodeWrapper PropertyAssign();
         NodeWrapper IfStmt();
         NodeWrapper WhileLoop();
         NodeWrapper ForLoop();
         NodeWrapper ParseFuncDec();
+        NodeWrapper ParseClassMethod();
         NodeWrapper ReturnStmt();
         vector<Node*> Args();
         vector<string> Params();

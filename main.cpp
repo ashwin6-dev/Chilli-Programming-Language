@@ -21,7 +21,7 @@ int main(int argc, char** argv) {
     
     Node* program = p.Parse().node;
     Visitor v;
-
+    cout.precision(15);
     program->accept(&v);
 }
 

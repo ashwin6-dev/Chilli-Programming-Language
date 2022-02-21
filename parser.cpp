@@ -64,6 +64,9 @@ NodeWrapper Parser::Line() {
     NodeWrapper line = VarAssign();
     if (line.parseSuccess) return line;
 
+    line = PropertyAssign();
+    if (line.parseSuccess) return line;
+
     line = IfStmt();
     if (line.parseSuccess) return line;
 
@@ -74,6 +77,9 @@ NodeWrapper Parser::Line() {
     if (line.parseSuccess) return line;
 
     line = ParseFuncDec();
+    if (line.parseSuccess) return line;
+
+    line = ParseClassMethod();
     if (line.parseSuccess) return line;
 
     line = ReturnStmt();
@@ -248,7 +254,7 @@ NodeWrapper Parser::Not() {
     }
 
     
-    NodeWrapper expr = DotExpr();
+    NodeWrapper expr = IndexingExpr();
 
     if (!expr.parseSuccess) return expr;
 
@@ -260,27 +266,10 @@ NodeWrapper Parser::Not() {
     return WrapNode(true, new NotNode(expr.node));
 }
 
-NodeWrapper Parser::DotExpr() {
-    NodeWrapper left = IndexingExpr();
-
-    if (!left.parseSuccess) return left;
-
-    Node* LeftNode = left.node;
-    Token next = tokenizer.Peek();
-
-    while (next.type == "DOT") {
-        EatValue(".");
-        NodeWrapper right = PrimaryExpr();
-        LeftNode = new OpNode(".", LeftNode, right.node);
-        next = tokenizer.Peek();
-    }
-
-    return WrapNode(true, LeftNode);
-}
 
 
 NodeWrapper Parser::IndexingExpr() {
-    NodeWrapper left = PrimaryExpr();
+    NodeWrapper left = DotExpr();
 
     if (!left.parseSuccess) return left;
 
@@ -297,6 +286,25 @@ NodeWrapper Parser::IndexingExpr() {
 
     return left;
 }
+
+NodeWrapper Parser::DotExpr() {
+    NodeWrapper left = PrimaryExpr();
+
+    if (!left.parseSuccess) return left;
+
+    Node* LeftNode = left.node;
+    Token next = tokenizer.Peek();
+
+    while (next.type == "DOT") {
+        EatValue(".");
+        NodeWrapper right = PrimaryExpr();
+        LeftNode = new OpNode(".", LeftNode, right.node);
+        next = tokenizer.Peek();
+    }
+
+    return WrapNode(true, LeftNode);
+}
+
 
 
 NodeWrapper Parser::PrimaryExpr() {
@@ -379,6 +387,41 @@ NodeWrapper Parser::VarAssign() {
     tokenizer.lineno = saveLineno;
     return WrapNode(false, new Node());
 }
+
+NodeWrapper Parser::PropertyAssign() {
+    int save = tokenizer.idx;
+    int saveLineno = tokenizer.lineno;
+
+    string property = "";
+    Token next = tokenizer.Peek();
+
+    if (next.type == "IDENT") {
+        property += next.value;
+        EatType("IDENT");
+        next = tokenizer.Peek();
+
+        while (next.value == ".") {
+            EatValue(".");
+            property += ".";
+            property += EatType("IDENT").value;
+            next = tokenizer.Peek();
+        }
+
+        if (property.find(".") < property.size()) {
+            if (next.value == "=") {
+                EatValue("=");
+                NodeWrapper expr = Expr();
+
+                return WrapNode(true, new PropertyAssignNode(property, expr.node));
+            }
+        }
+    }
+
+    tokenizer.idx = save;
+    tokenizer.lineno = saveLineno;
+    return WrapNode(false, new Node());
+}
+
 
 
 NodeWrapper Parser::IfStmt() {
@@ -496,6 +539,42 @@ NodeWrapper Parser::ParseFuncDec() {
     tokenizer.lineno = saveLineno;
     return WrapNode(false, new Node());
 }
+
+NodeWrapper Parser::ParseClassMethod() {
+    Token next = tokenizer.Peek();
+
+    int save = tokenizer.idx;
+    int saveLineno = tokenizer.lineno;
+
+    if (next.type == "MULT") {
+        EatValue("*");
+        if (tokenizer.Peek().type == "IDENT") {
+            string c = EatType("IDENT").value;
+
+            if (tokenizer.Peek().type == "IDENT") {
+
+                string value = EatType("IDENT").value;
+                EatValue("(");
+                vector<string> params = Params();
+                EatValue(")");
+
+                NodeWrapper block = Block();
+
+                next = tokenizer.Peek();
+
+                if (next.value == "end") {
+                    EatValue("end");
+                    return WrapNode(true, new ClassMethod(value, c, params, block.node));
+                }
+            }
+        }
+    }
+
+    tokenizer.idx = save;
+    tokenizer.lineno = saveLineno;
+    return WrapNode(false, new Node());
+}
+
 
 NodeWrapper Parser::ReturnStmt() {
     Token next = tokenizer.Peek();

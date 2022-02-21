@@ -6,6 +6,27 @@
 
 using namespace std;
 
+
+StackItem FunctionAsStackItem(function<void(FuncCall*, Visitor*, StackItem)> f) {
+    StackItem fn;
+    Value v(f);
+
+    fn.type = Function;
+    fn.value = v;
+
+    return fn;
+}
+
+StackItem FunctionAsStackItem(function<void(FuncCall*, Visitor*)> f) {
+    StackItem fn;
+    Value v(f);
+
+    fn.type = Function;
+    fn.value = v;
+
+    return fn;
+}
+
 ostream& operator<<(ostream& os, const StackItem& st)
 {
     if (st.type == Float) {
@@ -29,6 +50,8 @@ ostream& operator<<(ostream& os, const StackItem& st)
         }
 
         cout << "}";
+    }else if (st.type == Function) {
+        os << "Function";
     }
     
     return os;
@@ -180,7 +203,6 @@ StackItem StackItem::operator>(StackItem item) {
 }
 
 void Println(FuncCall* node, Visitor* visitor) {
-    cout.precision(15);
     
     for (Node* arg : node->args) {
         arg->accept(visitor);
@@ -190,8 +212,6 @@ void Println(FuncCall* node, Visitor* visitor) {
 }
 
 void Print(FuncCall* node, Visitor* visitor) {
-    cout.precision(15);
-
     for (Node* arg : node->args) {
         arg->accept(visitor);
         cout << visitor->Pop() << " ";
@@ -266,66 +286,6 @@ void Number(FuncCall* node, Visitor* visitor) {
     }
 }
 
-void Size(FuncCall* node, Visitor* visitor, StackItem obj) {
-    visitor->obj = false;
-    if (obj.type == List) {
-        StackItem size;
-
-        Value v(double(obj.value.list_value.size()));
-        size.type = Float;
-        size.value = v;
-
-        
-        visitor->ExprStack.push_back(size);
-    }else if (obj.type == String) {
-        StackItem size;
-        Value v(double(obj.value.string_value.size()));
-        size.type = Float;
-        size.value = v;
-        visitor->ExprStack.push_back(size);
-    }
-}
-
-void Slice(FuncCall* node, Visitor* visitor, StackItem obj) {
-    visitor->obj = false;
-    node->args[0]->accept(visitor);
-    StackItem start = visitor->Pop();
-    node->args[1]->accept(visitor);
-    StackItem end = visitor->Pop();
-
-    if (obj.type == List) {
-        if (start.type == end.type && start.type == Float) {
-            vector<StackItem> list;
-            for (int i = start.value.float_value; i <= end.value.float_value; i++) {
-                list.push_back(obj.value.list_value[i]);
-            }
-
-            StackItem item;
-            Value v(list);
-
-            item.type = List;
-            item.value = v;
-
-            visitor->ExprStack.push_back(item);
-        }
-    }else if (obj.type == String) {
-        if (start.type == end.type && start.type == Float) {
-            string s;
-            for (int i = start.value.float_value; i <= end.value.float_value; i++) {
-                s += obj.value.string_value[i];
-            }
-
-            StackItem item;
-            Value v(s);
-
-            item.type = String;
-            item.value = v;
-
-            visitor->ExprStack.push_back(item);
-        }
-    }
-}
-
 
 void Range(FuncCall* node, Visitor* visitor) {
     double start = 0;
@@ -369,39 +329,24 @@ void Range(FuncCall* node, Visitor* visitor) {
     visitor->ExprStack.push_back(range);
 }
 
-
-void _Push(FuncCall* node, Visitor* visitor, StackItem obj) {
-    visitor->obj = false;
-    if (obj.type == List) {
-        vector<StackItem>* list = &obj.value.list_value;
-        node->args[0]->accept(visitor);
-        list->push_back(visitor->Pop());
-
-        visitor->ExprStack.push_back(obj);
-        visitor->mut_obj = true;
-    }
-}
-
 Visitor::Visitor() {
     block_no = 0;
     continue_block = true;
     VMap["true"] = StackItem(Bool, Value(true));
     VMap["false"] = StackItem(Bool, Value(false));
     call_no.push_back(0);
-    FMap["println"] = Println;
-    FMap["print"] = Print;
-    FMap["range"] = Range;
-    FMap["str"] = Str;
-    FMap["number"] = Number;
-    FMap["readln"] = Readln;
-    OBJFMap["size"] = Size;
-    OBJFMap["push"] = _Push;
-    OBJFMap["slice"] = Slice;
+    VMap["println"] = FunctionAsStackItem(Println);
+    VMap["print"] = FunctionAsStackItem(Print);
+    VMap["range"] = FunctionAsStackItem(Range);
+    VMap["str"] = FunctionAsStackItem(Str);
+    VMap["number"] = FunctionAsStackItem(Number);
+    VMap["readln"] = FunctionAsStackItem(Readln);
 }
 
 void Visitor::Push(Type type, Value value) {
-    StackItem item(type, value);
-    ExprStack.push_back(item);
+    next_item.type = type;
+    next_item.value = value;
+    ExprStack.push_back(next_item);
 }
 
 StackItem Visitor::Pop() {
@@ -443,11 +388,31 @@ void Visitor::visit(FloatNode* node) {
 }
 
 void Visitor::visit(VarNode* node) {
-    if (mut_obj) {
-        VMap[node->value] = Pop();
-        mut_obj = false;
-    }else {
+    if (obj) {
+        if (!currObj.value.object_props.count(node->value)) {
+            cout << "error: no property called " << node->value;
+            exit(-1);
+        }
+        ExprStack.push_back(currObj.value.object_props[node->value]);
+    }
+    else {
         ExprStack.push_back(VMap[node->value]);
+    }
+}
+
+void Visitor::mutate(VarNode* node) {
+    if (obj) {
+        update_me->value.object_props[node->value] = Pop();
+    }else {
+        VMap[node->value] = Pop();
+    }
+}
+
+void Visitor::PointTo(VarNode* node) {
+    if (obj) {
+        update_me = &update_me->value.object_props[node->value];
+    }else {
+        update_me = &VMap[node->value];
     }
 }
 
@@ -464,12 +429,8 @@ void Visitor::visit(IndexingNode* node) {
                 v += object.value.string_value.size();
             }
             string ch = string(1, object.value.string_value[v]);
-            StackItem item;
             Value v(ch);
-            item.value = v;
-            item.type = String;
-
-            ExprStack.push_back(item);
+            Push(String, v);
         }else if (object.type == List) {
             if (v < 0) {
                 v += object.value.list_value.size();
@@ -519,23 +480,43 @@ void Visitor::visit(OpNode* node) {
     }
 }
 
-
-void Visitor::visit(FuncCall* node) {
-    if (obj) {
+void Visitor::visit(FuncCall *node)
+{
+    if (obj)
+    {
         call_no.push_back(block_no);
-        OBJFMap[node->value](node, this, currObj);
+
+        StackItem fn = currObj.value.object_props[node->value];
+        if (fn.type == Function)
+        {
+            fn.value.method_value(node, this, currObj);
+        }
+
         obj = false;
         call_no.pop_back();
         continue_block = true;
-    }else {
-
-        if (!FMap.count(node->value)) {
-            cout << "error: the function " << node->value << " has not been defined";
-            exit(-1);
-        }
-
+    }
+    else if (!VMap.count(node->value))
+    {
+        cout << "error: the function " << node->value << " has not been defined";
+        exit(-1);
+    }
+    else
+    {
         call_no.push_back(block_no);
-        FMap[node->value](node, this);
+        StackItem fn = VMap[node->value];
+        if (fn.type == Function)
+        {
+            if (fn.value.func_args_no == 2)
+            {
+                fn.value.func_value(node, this);
+            }
+            else
+            {
+                fn.value.method_value(node, this, StackItem());
+                mut_obj = false;
+            }
+        }
         call_no.pop_back();
         continue_block = true;
     }
@@ -544,6 +525,38 @@ void Visitor::visit(FuncCall* node) {
 void Visitor::visit(VarAssignNode* node) {
     node->expr->accept(this);
     VMap[node->value] = Pop();
+}
+
+void Visitor::visit(PropertyAssignNode* node) {
+    node->expr->accept(this);
+    StackItem value = Pop();
+    StackItem* object;
+    vector<string> props;
+    string cur_prop = "";
+
+    for (char ch : node->property) {
+        if (ch != '.') { 
+            cur_prop += ch;
+        }else {
+            props.push_back(cur_prop);
+            cur_prop = "";
+        }
+    }
+
+    if (cur_prop != "") {
+        props.push_back(cur_prop);
+    }
+
+    for (int i = 0; i < props.size() - 1; i++) {
+        string prop = props[i];
+        if (i == 0) {
+            object = &VMap[prop];
+        }else {
+            object = &object->value.object_props[prop];
+        }
+    }
+    cur_prop = props.back();
+    object->value.object_props[cur_prop] = value;
 }
 
 void Visitor::visit(IfNode* node) {
@@ -586,7 +599,7 @@ void Visitor::visit(ForNode* node) {
 }
 
 void Visitor::visit(FuncDec* node) {
-    FMap[node->value] = [=](FuncCall* call_node, Visitor* visitor) {
+    function<void(FuncCall* call_node, Visitor* visitor)> func = [=](FuncCall* call_node, Visitor* visitor) {
         auto copy = visitor->VMap;
         
         for (int i = 0; i < call_node->args.size(); i++) {
@@ -597,10 +610,66 @@ void Visitor::visit(FuncDec* node) {
         node->block->accept(visitor); 
         visitor->VMap = copy;
     };
+
+    Value v(func);
+    StackItem fn(Function, v);
+    
+    VMap[node->value] = fn;
+}
+
+void Visitor::visit(ClassMethod* node) {
+    function<void(FuncCall*, Visitor*, StackItem)> func = [=](FuncCall* call_node, Visitor* visitor, StackItem self) {
+        visitor->obj = false;
+        auto copy = visitor->VMap;
+
+        if (node->value == "init") {
+            self = visitor->classes[node->class_name];
+        }
+        
+        for (int i = 0; i < call_node->args.size(); i++) {
+            call_node->args[i]->accept(visitor);
+            visitor->VMap[node->params[i]] = visitor->Pop();
+        }
+
+        visitor->VMap["this"] = self;
+        node->block->accept(visitor); 
+        visitor->ExprStack.push_back(visitor->VMap["this"]);  
+        visitor->mut_obj = true;
+        visitor->VMap = copy;
+    };
+
+    StackItem fn = FunctionAsStackItem(func);
+
+    if (node->value == "init") {
+        VMap[node->class_name] = fn;
+    }else if (!classes.count(node->class_name)) {
+        Value v(node->class_name, "obj");
+        v.object_props[node->value] = fn;
+        StackItem obj(Object, v);
+
+        classes[node->class_name] = obj;
+    }else {
+        classes[node->class_name].value.object_props[node->value] = fn;
+    }  
+}
+
+void ListPush(FuncCall* node, Visitor* visitor, StackItem self) {
+    visitor->obj = false;
+    node->args[0]->accept(visitor);
+    StackItem item = visitor->Pop();
+
+    self.value.list_value.push_back(item);
+    visitor->ExprStack.push_back(self);
+    visitor->mut_obj = true;
+}
+
+void ListSize(FuncCall* node, Visitor* visitor, StackItem self) {
+    double size = self.value.list_value.size();
+    Value v(size);
+    visitor->Push(Float, v);
 }
 
 void Visitor::visit(ListNode* node) {
-    StackItem list;
     vector<StackItem> value;
 
     for (Node* el : node->value) {
@@ -609,10 +678,10 @@ void Visitor::visit(ListNode* node) {
     }
 
     Value v(value);
-    list.type = List;
-    list.value = v;
+    v.object_props["push"] = FunctionAsStackItem(ListPush);
+    v.object_props["size"] = FunctionAsStackItem(ListSize);
 
-    ExprStack.push_back(list);
+    Push(List, v);
 } 
 
 
@@ -661,10 +730,7 @@ void Visitor::Pow() {
         if (left.type == Float) {
             double res = pow(left.value.float_value, right.value.float_value);
             Value v(res);
-            StackItem item;
-            item.type = Float;
-            item.value = v;
-            ExprStack.push_back(item);
+            Push(Float, v);
         }
     }
 }
@@ -716,7 +782,7 @@ void Visitor::And() {
     StackItem left = Pop();
     
 
-    ExprStack.push_back( StackItem(Bool, Value(left.value.bool_value && right.value.bool_value)));
+    ExprStack.push_back(StackItem(Bool, Value(left.value.bool_value && right.value.bool_value)));
 }
 
 void Visitor::Or() {
@@ -729,12 +795,30 @@ void Visitor::Or() {
 
 void Visitor::Dot(OpNode* node) {
     node->left->accept(this);
-    StackItem left = Pop();
+    currObj = Pop();
     obj = true;
-    currObj = left;
     node->right->accept(this);
+    obj = false;
 
     if (mut_obj) {
-        node->left->accept(this);
+        node->left->mutate(this);
+        mut_obj = false;
+    }
+}
+
+void Visitor::PointTo(OpNode* node) {
+    if (node->op == ".") {
+        node->left->point(this);
+        obj = true;
+        node->right->point(this);
+        obj = false;
+    }
+}
+void Visitor::mutate(OpNode* node) {
+    if (node->op == ".") {
+        node->left->point(this);
+        obj = true;
+        node->right->mutate(this);
+        obj = false;
     }
 }

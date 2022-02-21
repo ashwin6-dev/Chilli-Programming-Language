@@ -11,6 +11,10 @@ void Node::print() {
 
 void Node::accept(Visitor* visitor) {};
 
+void Node::mutate(Visitor* visitor) {};
+
+void Node::point(Visitor* visitor) {};
+
 BlockNode::BlockNode(vector<Node*> l) {
     lines = l;
 }
@@ -60,6 +64,11 @@ VarAssignNode::VarAssignNode(string v, Node* e) {
     expr = e;
 }
 
+PropertyAssignNode::PropertyAssignNode(string p, Node* e) {
+    property = p;
+    expr = e;
+}
+
 IfNode::IfNode(Node* exp, Node* b, Node* eb) {
     expr = exp;
     block = b;
@@ -89,6 +98,13 @@ ListNode::ListNode(vector<Node*> list) {
 
 ReturnNode::ReturnNode(Node* e) {
     expr = e;
+}
+
+ClassMethod::ClassMethod(string v, string c, vector<string> p, Node* b) {
+    value = v;
+    class_name = c;
+    params = p;
+    block = b;
 }
 
 void StringNode::print() {
@@ -153,7 +169,19 @@ void OpNode::accept(Visitor* visitor) {
     visitor->visit(this);
 }
 
+void OpNode::mutate(Visitor* visitor) {
+    visitor->mutate(this);
+}
+
+void OpNode::point(Visitor* visitor) {
+    visitor->PointTo(this);
+}
+
 void VarAssignNode::accept(Visitor* visitor) {
+    visitor->visit(this);
+}
+
+void PropertyAssignNode::accept(Visitor* visitor) {
     visitor->visit(this);
 }
 
@@ -179,4 +207,16 @@ void ReturnNode::accept(Visitor* visitor) {
 
 void ListNode::accept(Visitor* visitor) {
     visitor->visit(this);
+}
+
+void ClassMethod::accept(Visitor* visitor) {
+    visitor->visit(this);
+}
+
+void VarNode::mutate(Visitor* visitor) {
+    visitor->mutate(this);
+}
+
+void VarNode::point(Visitor* visitor) {
+    visitor->PointTo(this);
 }

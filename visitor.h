@@ -10,9 +10,12 @@ enum Type {
     Float,
     String,
     Bool,
-    List
+    List,
+    Function,
+    Object
 };
 
+class Visitor;
 class StackItem;
 
 class Value {
@@ -21,6 +24,11 @@ class Value {
         string string_value;
         bool bool_value;
         vector<StackItem> list_value;
+        string object_name;
+        map<string, StackItem> object_props;
+        function<void(FuncCall*, Visitor*, StackItem)> method_value;
+        function<void(FuncCall*, Visitor*)> func_value;
+        int func_args_no;
 
         Value() {}
 
@@ -44,6 +52,12 @@ class Value {
             }
         };
 
+        Value(string o_name, string s) {
+            if (s == "obj") {
+                object_name = o_name;
+            }
+        };
+
 
         Value(bool b) {
             bool_value = b;
@@ -57,6 +71,16 @@ class Value {
             }else {
                 bool_value = true;
             }
+        }
+
+        Value(function<void(FuncCall*, Visitor*, StackItem)> f) {
+            method_value = f;
+            func_args_no = 3;
+        }
+
+        Value(function<void(FuncCall*, Visitor*)> f) {
+            func_value = f;
+            func_args_no = 2;
         }
 };
 
@@ -86,8 +110,7 @@ class StackItem {
 
 class Visitor {
     public:
-        map<string, function<void(FuncCall*, Visitor*)>> FMap;
-        map<string, function<void(FuncCall*, Visitor*, StackItem)>> OBJFMap;
+        map<string, StackItem> classes;
         map<string, StackItem> VMap;
         int block_no;
         vector<int> call_no;
@@ -95,6 +118,8 @@ class Visitor {
         bool obj = false;
         bool mut_obj = false;
         StackItem currObj;
+        StackItem next_item;
+        StackItem* update_me;
         Visitor();
         vector<StackItem> ExprStack;
         StackItem Pop();
@@ -105,16 +130,20 @@ class Visitor {
         void visit(NotNode* node);
         void visit(IndexingNode* node);
         void visit(VarNode* node);
+        void mutate(VarNode* node);
+        void PointTo(VarNode* node);
         void visit(OpNode* node);
         void visit(FuncCall* node);
         void visit(FuncCall* node, StackItem obj);
         void visit(VarAssignNode* node);
+        void visit(PropertyAssignNode* node);
         void visit(IfNode* node);
         void visit(WhileNode* node);
         void visit(ForNode* node);
         void visit(FuncDec* node);
         void visit(ReturnNode* node);
         void visit(ListNode* node);
+        void visit(ClassMethod* node);
         void Mod();
         void Add();
         void Sub();
@@ -129,4 +158,6 @@ class Visitor {
         void And();
         void Or();
         void Dot(OpNode* node);
+        void mutate(OpNode* node);
+        void PointTo(OpNode* node);
 };
