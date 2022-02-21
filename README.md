@@ -22,4 +22,3 @@ To add...
 
 1. Improve error handling (error messages are still too simple and not all errors are handled yet)
 2. Create a documentation for the language
-3. Add OOP
