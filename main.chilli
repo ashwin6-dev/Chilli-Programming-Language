@@ -1,28 +1,12 @@
-print ("hello")
-print ("hello")
-print ("hello")
-print ("hello")
-print ("hello")
-print ("hello")
-print ("hello")
-print ("hello")
-print ("hello")
-print ("hello")
-print ("hello")
-print ("hello")
-print ("hello")
-print ("hello")
-print ("hello")
-print ("hello")
-print ("hello")
-print ("hello")
-print ("hello")
-print ("hello")
-print ("hello")
-print ("hello")
-print ("hello")
-print ("hello")
-print ("hello")
-print ("hello")
-print ("hello")
-print ("hello")
+fib :: (n)
+    if n < 2
+        return n
+    end
+
+    return fib(n-1)+fib(n-2) 
+end
+
+
+for n range(0, 10, 1)
+    print (fib(n))
+end
