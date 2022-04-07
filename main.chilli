@@ -7,6 +7,6 @@ fib :: (n)
 end
 
 
-for n range(0, 10, 1)
-    print (fib(n))
+for n range(0, 25, 1)
+    println (fib(n))
 end
