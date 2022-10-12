@@ -17,8 +17,3 @@ To run program (assuming you have compiled the interpreter and have name it "chi
 ```
 chilli <filename>
 ```
-
-To add...
-
-1. Improve error handling (error messages are still too simple and not all errors are handled yet)
-2. Create a documentation for the language
